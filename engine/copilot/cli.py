@@ -69,7 +69,7 @@ def main(argv=None):
         description="AI-to-Music bridge CLI (Phase 1)")
     parser.add_argument("--cmd-port", default="Copilot CMD",
                         help="output port name (substring match)")
-    parser.add_argument("--rsp-port", default="Copilot RSP",
+    parser.add_argument("--rsp-port", default="Copilot CMD",
                         help="input port name (substring match)")
     parser.add_argument("--timeout", type=float, default=2.0,
                         help="seconds to wait per response")

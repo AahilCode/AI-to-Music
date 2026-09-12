@@ -20,7 +20,7 @@ class BridgeTimeout(TimeoutError):
     """No matching response arrived before the deadline."""
 
 
-def open_ports(cmd_port_name="Copilot CMD", rsp_port_name="Copilot RSP"):
+def open_ports(cmd_port_name="Copilot CMD", rsp_port_name="Copilot CMD"):
     """Open the real virtual-MIDI ports. Call only from the CLI / app."""
     try:
         import mido
