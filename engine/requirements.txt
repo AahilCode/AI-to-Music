@@ -1,0 +1,3 @@
+# MIDI plumbing for the external engine (runs on your machine, not in FL).
+mido                # friendly MIDI message API (sysex send/receive)
+python-rtmidi        # backend; talks to macOS CoreMIDI / ALSA / WinMM
