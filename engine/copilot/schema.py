@@ -22,5 +22,11 @@ VALID_ACTIONS = {
     },
     "clear_channel": {
         "required": ["channel"]
+    },
+    "play_chords": {
+        "required": ["chords"]
+    },
+    "play_melody": {
+        "required": ["notes"]
     }
 }

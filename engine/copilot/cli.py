@@ -85,7 +85,6 @@ def cmd_execute(args):
 def cmd_prompt(args):
     bridge = _open_bridge(args)
     try:
-        # 1. Inspect current FL Studio state
         print("Reading FL Studio project state...")
         channels_payload = bridge.request("get_channels")
         available_channels = [ch.strip() for ch in channels_payload.split(",") if ch.strip()]
@@ -95,14 +94,13 @@ def cmd_prompt(args):
         print("  - Available channels: %s" % ", ".join(available_channels))
         print("  - Current BPM: %.2f" % current_tempo)
 
-        # 2. Ask AI to plan the actions
-        print("\n[AI] Thinking with Groq (Llama 3.3)...")
+        print("\n[AI] Planning with Groq...")
         start_time = time.monotonic()
         plan = ai.generate_action_plan(args.user_prompt, available_channels, current_tempo)
         ai_duration = time.monotonic() - start_time
-        print("[AI] Plan generated in %.2f seconds (%d actions proposed)" % (ai_duration, len(plan)))
+        print("[AI] Generated plan in %.2f seconds:" % ai_duration)
+        print(json.dumps(plan, indent=2))
 
-        # 3. Execute the planned actions
         print("\nExecuting actions in FL Studio...")
         results = actions.execute_batch(plan, bridge)
         _print_summary(results)
@@ -127,6 +125,10 @@ def _print_summary(results):
             print(" [%d] Set step %s to %s on '%s'" % (idx + 1, act["step"], act["value"], act["channel"]))
         elif act_type == "clear_channel":
             print(" [%d] Cleared channel '%s'" % (idx + 1, act["channel"]))
+        elif act_type == "play_melody":
+            print(" [%d] Played dynamic melody sequence (%d notes) 🎹" % (idx + 1, len(act["notes"])))
+        elif act_type == "play_chords":
+            print(" [%d] Played chord progression (%d chords) 🎸" % (idx + 1, len(act["chords"])))
         elif act_type == "play":
             print(" [%d] Started playback ▶" % (idx + 1))
         elif act_type == "stop":
@@ -156,7 +158,7 @@ def main(argv=None):
     execute.add_argument("json_string")
 
     prompt = sub.add_parser("prompt", help="Natural language AI command")
-    prompt.add_argument("user_prompt", help="e.g. 'Make a 145 BPM trap beat with kicks and claps'")
+    prompt.add_argument("user_prompt", help="e.g. 'Make a 140 BPM beat with piano'")
 
     args = parser.parse_args(argv)
     try:
