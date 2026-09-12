@@ -11,10 +11,8 @@ VALID_ACTIONS = {
     "stop": {
         "required": []
     },
-    "set_step": {
-        "required": ["channel", "step", "value"],
-        "step_range": (0, 15),
-        "value_range": (0, 1)
+    "record": {
+        "required": []
     },
     "set_step_pattern": {
         "required": ["channel", "steps"],
@@ -23,10 +21,7 @@ VALID_ACTIONS = {
     "clear_channel": {
         "required": ["channel"]
     },
-    "play_chords": {
-        "required": ["chords"]
-    },
-    "play_melody": {
-        "required": ["notes"]
+    "play_layered_progression": {
+        "required": ["sections"]
     }
 }

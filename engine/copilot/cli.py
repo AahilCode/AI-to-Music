@@ -120,19 +120,17 @@ def _print_summary(results):
         if act_type == "set_tempo":
             print(" [%d] Set tempo to %s BPM" % (idx + 1, act["bpm"]))
         elif act_type == "set_step_pattern":
-            print(" [%d] Wrote drum pattern to '%s' (steps: %s)" % (idx + 1, act["channel"], act["steps"]))
-        elif act_type == "set_step":
-            print(" [%d] Set step %s to %s on '%s'" % (idx + 1, act["step"], act["value"], act["channel"]))
+            print(" [%d] Wrote 4-bar drum pattern to '%s' (steps: %s)" % (idx + 1, act["channel"], act["steps"]))
         elif act_type == "clear_channel":
             print(" [%d] Cleared channel '%s'" % (idx + 1, act["channel"]))
-        elif act_type == "play_melody":
-            print(" [%d] Played dynamic melody sequence (%d notes) 🎹" % (idx + 1, len(act["notes"])))
-        elif act_type == "play_chords":
-            print(" [%d] Played chord progression (%d chords) 🎸" % (idx + 1, len(act["chords"])))
+        elif act_type == "record":
+            print(" [%d] Armed recording in FL Studio ⏺" % (idx + 1))
         elif act_type == "play":
             print(" [%d] Started playback ▶" % (idx + 1))
         elif act_type == "stop":
             print(" [%d] Stopped playback ⏹" % (idx + 1))
+        elif act_type == "play_layered_progression":
+            print(" [%d] Recorded Transcendent 4-Bar Multi-Layered Progression ✨🎹" % (idx + 1))
         else:
             print(" [%d] %s -> %s" % (idx + 1, act_type, res))
     print("All %d actions completed successfully!" % len(results))
