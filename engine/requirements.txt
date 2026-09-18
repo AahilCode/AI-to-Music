@@ -2,3 +2,4 @@
 mido                # friendly MIDI message API (sysex send/receive)
 python-rtmidi        # backend; talks to macOS CoreMIDI / ALSA / WinMM
 groq>=0.18.0
+flask>=3.0.0

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-to-Music Copilot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0b0e;
+            --bg-surface: #14161d;
+            --bg-surface-elevated: #1e222d;
+            --accent-primary: #ff5e36;
+            --accent-glow: rgba(255, 94, 54, 0.25);
+            --accent-cyan: #00f0ff;
+            --text-main: #f0f2f5;
+            --text-muted: #8b92a5;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --success: #00e676;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-badge {
+            background: linear-gradient(135deg, var(--accent-primary), #ff2a6d);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .logo-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--bg-surface-elevated);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            flex: 1;
+            height: calc(100vh - 61px);
+            overflow: hidden;
+        }
+
+        /* Left Sidebar: DAW Control Panel */
+        .sidebar {
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .card {
+            background-color: var(--bg-surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .bpm-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bpm-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .transport-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn-transport {
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-transport:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .channels-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .channel-tag {
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-preset {
+            background-color: var(--bg-surface-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-preset:hover {
+            background-color: rgba(255, 94, 54, 0.1);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        /* Right Side: Chat & Generation Log */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-base);
+            position: relative;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .message {
+            display: flex;
+            gap: 14px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.ai .avatar {
+            background: linear-gradient(135deg, var(--accent-primary), #ff2a6d);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .message.user .avatar {
+            background-color: var(--bg-surface-elevated);
+            border: 1px solid var(--border-color);
+        }
+
+        .bubble {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.user .bubble {
+            background-color: var(--accent-primary);
+            border: none;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai .bubble {
+            border-bottom-left-radius: 4px;
+        }
+
+        .actions-summary {
+            margin-top: 10px;
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .actions-summary .action-line {
+            color: var(--accent-cyan);
+        }
+
+        .input-bar-container {
+            padding: 20px 24px;
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-form {
+            display: flex;
+            gap: 12px;
+            background-color: var(--bg-surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 6px 6px 6px 16px;
+            transition: border-color 0.2s;
+        }
+
+        .input-form:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .prompt-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .prompt-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--accent-primary), #ff2a6d);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-send:hover {
+            opacity: 0.9;
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 18px;
+            background-color: var(--bg-surface);
+            border-radius: 12px;
+            width: fit-content;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-badge">⚡</div>
+            <div>
+                <div class="logo-title">AI-to-Music Copilot</div>
+                <div class="logo-sub">Natural Language Producer for FL Studio</div>
+            </div>
+        </div>
+        <div class="status-pill">
+            <div class="status-dot"></div>
+            <span id="bridge-status">FL Studio Bridge Connected</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="section-title">DAW Status</div>
+                <div class="card">
+                    <div class="bpm-display">
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted);">CURRENT TEMPO</div>
+                            <div class="bpm-value" id="tempo-display">---</div>
+                        </div>
+                    </div>
+                    <div class="transport-controls">
+                        <button class="btn-transport" onclick="triggerTransport('play')">▶ Play</button>
+                        <button class="btn-transport" onclick="triggerTransport('stop')">⏹ Stop</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Detected Channels</div>
+                <div class="card">
+                    <div class="channels-list" id="channels-container">
+                        <span class="channel-tag">Scanning...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Quick Prompts</div>
+                <div class="preset-buttons">
+                    <button class="btn-preset" onclick="runQuickPreset('Compose a deeply emotional Sufi flute ballad inspired by A.R. Rahman at 86 BPM with tabla rhythms and spiritual chords')">
+                        🕊️ Sufi Flute Ballad (86 BPM)
+                    </button>
+                    <button class="btn-preset" onclick="runQuickPreset('Make a fire 142 BPM dark trap beat with bouncy kick, claps on 4 and 12, fast rolling hi-hats, and an emotional melody')">
+                        🎹 Dark Trap Beat (142 BPM)
+                    </button>
+                    <button class="btn-preset" onclick="runQuickPreset('Make a chill 88 BPM boom bap drum groove with kick, snare on 4 and 12, and smooth hi-hats')">
+                        🥁 Chill Boom Bap (88 BPM)
+                    </button>
+                    <button class="btn-preset" onclick="runQuickPreset('Stop playback and clear all drum patterns')">
+                        🛑 Stop & Clear Drums
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <div class="messages-container" id="messages-list">
+                <div class="message ai">
+                    <div class="avatar">AI</div>
+                    <div class="bubble">
+                        Hey! I'm your FL Studio AI Copilot. Tell me what vibe or beat you want to create (e.g. <em>"Make a 140 BPM dark trap beat with piano"</em> or <em>"Compose an 86 BPM Sufi flute melody"</em>), and I'll produce and record it directly into FL Studio! 🎹✨
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator" style="margin-left: 24px;">
+                <span style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">AI is composing...</span>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+
+            <div class="input-bar-container">
+                <form class="input-form" onsubmit="handleSend(event)">
+                    <input type="text" id="prompt-input" class="prompt-input" placeholder="Type your music idea... (e.g. 'Produce a 145 BPM trap beat with bouncy 808s and piano')" autocomplete="off" />
+                    <button type="submit" id="btn-submit" class="btn-send">
+                        <span>Produce</span> 🚀
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('tempo-display').innerText = `${parseFloat(data.tempo).toFixed(0)} BPM`;
+                    
+                    const container = document.getElementById('channels-container');
+                    container.innerHTML = '';
+                    data.channels.forEach(ch => {
+                        const tag = document.createElement('span');
+                        tag.className = 'channel-tag';
+                        tag.innerText = ch;
+                        container.appendChild(tag);
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch DAW status", err);
+            }
+        }
+
+        async function triggerTransport(action) {
+            try {
+                await fetch('/api/transport', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+            } catch (err) {
+                console.error("Transport action failed", err);
+            }
+        }
+
+        function runQuickPreset(promptText) {
+            document.getElementById('prompt-input').value = promptText;
+            handleSend(new Event('submit'));
+        }
+
+        async function handleSend(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('prompt-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            // Add user message to UI
+            addMessage('user', prompt);
+            input.value = '';
+
+            // Show typing indicator & disable send
+            const indicator = document.getElementById('typing-indicator');
+            const btnSubmit = document.getElementById('btn-submit');
+            indicator.style.display = 'flex';
+            btnSubmit.disabled = true;
+
+            try {
+                const res = await fetch('/api/prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await res.json();
+                indicator.style.display = 'none';
+                btnSubmit.disabled = false;
+
+                if (data.ok) {
+                    let summaryHtml = `<div class="actions-summary">`;
+                    data.results.forEach((item, idx) => {
+                        summaryHtml += `<div class="action-line">✓ [${idx + 1}] ${item}</div>`;
+                    });
+                    summaryHtml += `</div>`;
+
+                    addMessage('ai', `Produced your track in <strong>${data.duration.toFixed(2)}s</strong>! Here is what was executed: ${summaryHtml}`);
+                    fetchStatus(); // Refresh BPM and channels
+                } else {
+                    addMessage('ai', `❌ Error: ${data.error}`);
+                }
+            } catch (err) {
+                indicator.style.display = 'none';
+                btnSubmit.disabled = false;
+                addMessage('ai', `❌ Network error connecting to engine.`);
+            }
+        }
+
+        function addMessage(sender, htmlContent) {
+            const container = document.getElementById('messages-list');
+            const msg = document.createElement('div');
+            msg.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.innerText = sender === 'ai' ? 'AI' : 'YOU';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.innerHTML = htmlContent;
+
+            msg.appendChild(avatar);
+            msg.appendChild(bubble);
+            container.appendChild(msg);
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Initial status load
+        fetchStatus();
+        setInterval(fetchStatus, 5000);
+    </script>
+</body>
+</html>
