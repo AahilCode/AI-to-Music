@@ -1,4 +1,4 @@
-"""Web Server for the AI-to-Music Copilot Web UI."""
+"""Web Server for the AI-to-Music Copilot Web UI with Session Memory."""
 
 import os
 import time
@@ -9,6 +9,9 @@ from . import actions
 from . import ai
 
 app = Flask(__name__)
+
+# In-memory session chat history
+CHAT_HISTORY = []
 
 
 def _get_bridge():
@@ -61,9 +64,18 @@ def api_transport():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route("/api/clear_memory", methods=["POST"])
+def api_clear_memory():
+    """Reset the conversation memory."""
+    global CHAT_HISTORY
+    CHAT_HISTORY = []
+    return jsonify({"ok": True, "message": "Conversation memory cleared!"})
+
+
 @app.route("/api/prompt", methods=["POST"])
 def api_prompt():
-    """Process natural language music generation prompt."""
+    """Process natural language music generation prompt with chat memory."""
+    global CHAT_HISTORY
     data = request.json or {}
     user_prompt = data.get("prompt", "")
     if not user_prompt:
@@ -79,8 +91,10 @@ def api_prompt():
             channels_payload = bridge.request("get_channels")
             available_channels = [c.strip() for c in channels_payload.split(",") if c.strip()]
 
-            # 2. Plan actions with AI
-            plan = ai.generate_action_plan(user_prompt, available_channels, current_tempo)
+            # 2. Plan actions with AI (passing ongoing CHAT_HISTORY)
+            plan, raw_json_reply = ai.generate_action_plan(
+                user_prompt, available_channels, current_tempo, chat_history=CHAT_HISTORY
+            )
 
             # 3. Execute actions batch
             results = actions.execute_batch(plan, bridge)
@@ -107,6 +121,14 @@ def api_prompt():
                 else:
                     summary.append(f"Executed {act_type}")
 
+            # Save this turn to conversation memory!
+            CHAT_HISTORY.append({"role": "user", "content": user_prompt})
+            CHAT_HISTORY.append({"role": "assistant", "content": raw_json_reply})
+
+            # Keep memory lean (last 10 turns max)
+            if len(CHAT_HISTORY) > 10:
+                CHAT_HISTORY = CHAT_HISTORY[-10:]
+
             return jsonify({
                 "ok": True,
                 "duration": duration,
@@ -121,7 +143,7 @@ def api_prompt():
 
 def run():
     print("\n" + "=" * 55)
-    print("🚀 AI-to-Music Copilot Web Server Started!")
+    print("🚀 AI-to-Music Copilot Web Server Started (Memory Enabled)!")
     print("👉 Open your browser at: http://localhost:5001")
     print("=" * 55 + "\n")
     app.run(host="0.0.0.0", port=5001, debug=False)
